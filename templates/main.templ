@@ -1,0 +1,132 @@
+package templates
+
+import (
+	"fmt"
+	"math"
+	"time"
+)
+
+templ Layout(content templ.Component) {
+	<!DOCTYPE html>
+	<html lang="en">
+	<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<meta http-equiv="X-UA-Compatible" content="ie=edge">
+		<title>lvl</title>
+		<script src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.6/dist/htmx.min.js" integrity="sha384-Akqfrbj/HpNVo8k11SXBb6TlBWmXXlYQrCSqEWmyKJe+hDm3Z/B2WVG4smwBkRVm" crossorigin="anonymous"></script>
+		<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@unocss/reset/normalize.min.css" />
+		<script>
+			window.__unocss = {
+				rules: [
+					// custom rules...
+				],
+				// presets: [
+				// ],
+				shortcuts: [
+					[
+					/^button-(.*)$/,
+					([, c]) => `py-2 px-4 border-1 border-${c}-600 bg-${c}-300 hover:bg-${c}-400 rounded-lg shadow-md`,
+					]
+				],
+				theme: {
+					colors: {
+						gb: {
+							0: "color-mix(in srgb, #B5C7EB 100%, #50C878 0%)",
+							1: "color-mix(in srgb, #B5C7EB 95%, #50C878 5%)",
+							2: "color-mix(in srgb, #B5C7EB 90%, #50C878 10%)",
+							3: "color-mix(in srgb, #B5C7EB 85%, #50C878 15%)",
+							4: "color-mix(in srgb, #B5C7EB 80%, #50C878 15%)",
+							5: "color-mix(in srgb, #B5C7EB 75%, #50C878 20%)",
+							6: "color-mix(in srgb, #B5C7EB 70%, #50C878 25%)",
+							7: "color-mix(in srgb, #B5C7EB 65%, #50C878 30%)",
+							8: "color-mix(in srgb, #B5C7EB 60%, #50C878 35%)",
+							9: "color-mix(in srgb, #B5C7EB 55%, #50C878 40%)",
+							10: "color-mix(in srgb, #B5C7EB 50%, #50C878 45%)",
+							11: "color-mix(in srgb, #B5C7EB 45%, #50C878 50%)",
+							12: "color-mix(in srgb, #B5C7EB 40%, #50C878 55%)",
+							13: "color-mix(in srgb, #B5C7EB 35%, #50C878 60%)",
+							14: "color-mix(in srgb, #B5C7EB 30%, #50C878 65%)",
+							15: "color-mix(in srgb, #B5C7EB 25%, #50C878 70%)",
+							16: "color-mix(in srgb, #B5C7EB 20%, #50C878 75%)",
+							17: "color-mix(in srgb, #B5C7EB 15%, #50C878 80%)",
+							18: "color-mix(in srgb, #B5C7EB 10%, #50C878 85%)",
+							19: "color-mix(in srgb, #B5C7EB 5%, #50C878 90%)",
+							20: "color-mix(in srgb, #B5C7EB 0%, #50C878 95%)",
+						},
+					},
+				},
+			}
+		</script>
+		<script src="https://cdn.jsdelivr.net/npm/@unocss/runtime"></script>
+	</head>
+	<body>
+	<main>
+		@content
+	</main>
+	</body>
+	</html>
+}
+
+type Habit struct {
+	ID int
+	Name string
+	Level int
+	Exp int
+	Logs []HabitLog
+	StreakCount int
+}
+
+type HabitLog struct {
+	LogDate time.Time
+}
+
+templ DrawHabit(habit Habit) {
+	<div 
+		id={fmt.Sprintf("habit-%d", habit.ID)}
+		class={fmt.Sprintf("flex flex-col py-2 px-4 m-2 min-w-xs bg-gb-%d rounded-lg shadow-md", int32(math.Min(float64(len(habit.Logs)), 20)))}>
+		<h2 class="text-center">{habit.Name}</h2>
+		<p>Level: {habit.Level}</p>
+		<p>Exp: {habit.Exp}</p>
+		<p>Habit Count: {len(habit.Logs)}</p>
+		<p>Streak: {habit.StreakCount}</p>
+		<button class="button-white"
+			hx-post={fmt.Sprintf("/log-habit/%d", habit.ID)}
+			hx-target={fmt.Sprintf("#habit-%d", habit.ID)}
+			hx-swap="outerHTML"
+		>Log Habit</button>
+	</div>
+}
+
+templ HabitList(habits []Habit) {
+	<div id="habit-list" class="flex flex-row">
+		for _, h := range habits {
+			@DrawHabit(h)
+		}
+	</div>
+}
+
+templ Index(habits []Habit) {
+	<div class="flex flex-col p-4 m-4 w-full items-center">
+		<h1>Habit Tracker</h1>
+		@HabitList(habits)
+		<div class="bg-blue-200 p-4 rounded-lg shadow-lg">
+			<h3 class="text-center">New Habit</h3>
+			<form
+				hx-post="/create-habit"
+				hx-trigger="submit"
+				hx-swap="outerHTML"
+				hx-target="#habit-list"
+				class="flex flex-row"
+			>
+				<input
+					name="name"
+					type="text"
+					required
+					class="mx-2 py-2 px-2 bg-gray-100 text-lg rounded-lg shadow-md border border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+				></input>
+				<button class="button-red">Create Habit</button>
+			</form>
+		</div>
+	</div>
+}

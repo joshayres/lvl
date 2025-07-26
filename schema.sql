@@ -1,0 +1,13 @@
+CREATE TABLE habits (
+	id INTEGER PRIMARY KEY,
+	name text NOT NULL,
+	level INTEGER NOT NULL,
+	exp INTEGER NOT NULL
+);
+
+CREATE TABLE habitlogs (
+	id INTEGER PRIMARY KEY,
+	habit_id INTEGER NOT NULL,
+	log_date INTEGER NOT NULL,
+	FOREIGN KEY (habit_id) REFERENCES habits(id)
+);
